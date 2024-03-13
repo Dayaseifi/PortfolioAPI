@@ -5,6 +5,7 @@ import cookie_parser from 'cookie-parser'
 import errorHandler from './errors/errorHandler'
 import cors from 'cors'
 import authRouter from './router/authrouter'
+import exRouter from './router/exrouter'
 
 
 dotenv.config({
@@ -25,7 +26,7 @@ app.get('/' , (req : Request , res : Response , next : NextFunction) => {
 })
 
 app.use('/auth' , authRouter)
-
+app.use('/ex' , exRouter)
 app.use(errorHandler.error404)
 app.use(errorHandler.unexceptionError)
 let port = process.env.PORT

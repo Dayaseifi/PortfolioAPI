@@ -22,12 +22,6 @@ model User {
   refreshToken String? @db.LongText
 }
 
-model Page {
-  ID      Int    @id @default(autoincrement())
-  name    String @unique
-  content String
-}
-
 model Expertise {
   ID      Int    @id @default(autoincrement())
   name    String @unique

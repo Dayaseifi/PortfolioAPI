@@ -10,6 +10,7 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const errorHandler_1 = __importDefault(require("./errors/errorHandler"));
 const cors_1 = __importDefault(require("cors"));
 const authrouter_1 = __importDefault(require("./router/authrouter"));
+const exrouter_1 = __importDefault(require("./router/exrouter"));
 dotenv_1.default.config({
     path: path_1.default.join(__dirname, '..', '.env')
 });
@@ -28,6 +29,7 @@ app.get('/', (req, res, next) => {
     }
 });
 app.use('/auth', authrouter_1.default);
+app.use('/ex', exrouter_1.default);
 app.use(errorHandler_1.default.error404);
 app.use(errorHandler_1.default.unexceptionError);
 let port = process.env.PORT;
