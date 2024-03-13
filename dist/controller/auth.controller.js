@@ -8,39 +8,45 @@ const RandomNumberGenerator_1 = require("../utils/RandomNumberGenerator");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 let prisma = new client_1.PrismaClient();
 class authController {
-    async SignUp(req, res, next) {
+    async sendOTP(req, res, next) {
         try {
-            let { phonenumber, name } = req.body;
-            let user = await prisma.user.findFirst({
-                where: {
-                    OR: [
-                        { username: { equals: name } },
-                        { phoneNumber: { equals: phonenumber } }
-                    ]
-                }
-            });
-            if (user) {
+            let phone = req.body.phone;
+            // Check if phone is not provided or empty
+            if (!phone) {
                 return res.status(400).json({
                     success: false,
-                    message: "user exist already"
+                    message: "Phone number is required"
+                });
+            }
+            let user = await prisma.user.findFirst({
+                where: {
+                    Phonenumber: phone
+                }
+            });
+            console.log(user);
+            console.log(1);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User not found"
                 });
             }
             let otp = (0, RandomNumberGenerator_1.generateRandomNumberString)(6);
-            let createUser = await prisma.user.create({
+            let updateUser = await prisma.user.update({
+                where: {
+                    ID: user.ID
+                },
                 data: {
-                    phoneNumber: phonenumber,
-                    username: name,
-                    otp,
-                    roleId: 1
+                    otp
                 }
             });
             return res.status(201).json({
-                message: "user created succesfully",
                 success: true,
-                data: createUser.ID
+                otp: updateUser.otp
             });
         }
         catch (error) {
+            console.log(error);
             next(error);
         }
     }
@@ -52,7 +58,7 @@ class authController {
                     otp
                 }
             });
-            if (!user || user.roleId != 1) {
+            if (!user) {
                 return res.status(401).json({
                     success: false,
                     message: "OTP is wrong"
@@ -60,8 +66,8 @@ class authController {
             }
             let payload = {
                 id: user.ID,
-                roleId: user.roleId,
-                username: user.username
+                username: user.username,
+                Phonenumber: user.Phonenumber
             };
             let accessToken = jsonwebtoken_1.default.sign(payload, process.env.ACCESS_TOKEN_KEY, {
                 expiresIn: "10m",
@@ -114,7 +120,6 @@ class authController {
                 let user = await prisma.user.findFirst({
                     where: {
                         refreshToken: refereshToken,
-                        roleId: +roleId,
                         ID: +id,
                         username
                     }

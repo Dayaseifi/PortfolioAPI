@@ -17,6 +17,8 @@ model User {
   ID           Int     @id @default(autoincrement())
   username     String  @unique
   email        String  @unique
+  Phonenumber  String  @unique
+  otp          String? @unique
   refreshToken String? @db.LongText
 }
 

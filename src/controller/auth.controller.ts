@@ -7,39 +7,45 @@ import { DecodedToken } from "../types/DecodedToken";
 
 let prisma = new PrismaClient()
 class authController {
-    async SignUp(req: Request, res: Response, next: NextFunction) {
+
+    async sendOTP(req: Request, res: Response, next: NextFunction) {
         try {
-            let { phonenumber, name } = req.body
-            let user = await prisma.user.findFirst({
-                where: {
-                    OR: [
-                        { username: { equals: name } },
-                        { phoneNumber: { equals: phonenumber } }
-                    ]
-                }
-            });
-            if (user) {
+            let phone = req.body.phone
+            // Check if phone is not provided or empty
+            if (!phone) {
                 return res.status(400).json({
                     success: false,
-                    message: "user exist already"
+                    message: "Phone number is required"
+                });
+            }
+            let user = await prisma.user.findFirst({
+                where: {
+                    Phonenumber: phone
+                }
+            })
+            console.log(user);
+            console.log(1);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User not found"
                 })
             }
             let otp = generateRandomNumberString(6)
-            let createUser = await prisma.user.create({
-                data: {
-                    phoneNumber: phonenumber,
-                    username: name,
-                    otp,
-                    roleId: 1
+            let updateUser = await prisma.user.update({
+                where: {
+                    ID : user.ID
+                },
+                data : {
+                    otp
                 }
             })
             return res.status(201).json({
-                message: "user created succesfully",
-                success: true,
-                data: createUser.ID
+                success : true,
+                otp : updateUser.otp
             })
-
         } catch (error) {
+            console.log(error);
             next(error)
         }
     }
@@ -51,16 +57,16 @@ class authController {
                     otp
                 }
             })
-            if (!user || user.roleId != 1) {
+            if (!user) {
                 return res.status(401).json({
                     success: false,
                     message: "OTP is wrong"
                 })
             }
-            let payload  = {
+            let payload = {
                 id: user.ID,
-                roleId: user.roleId,
-                username: user.username
+                username: user.username,
+                Phonenumber: user.Phonenumber
             }
             let accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_KEY!,
                 {
@@ -76,26 +82,26 @@ class authController {
             )
             await prisma.user.update({
                 where: {
-                  ID: user.ID
+                    ID: user.ID
                 },
                 data: {
-                  refreshToken: refereshtoken 
+                    refreshToken: refereshtoken
                 }
-              });
-              res.cookie('refreshToken' , refereshtoken , {
-                httpOnly : true,
-                sameSite : 'none',
-                maxAge : 1000 * 60 * 60 * 24 * 30
-              })
-              return res.status(200).json({
-                success : true,
-                message : "Login done succesfully",
-                data : {
-                    token : accessToken
+            });
+            res.cookie('refreshToken', refereshtoken, {
+                httpOnly: true,
+                sameSite: 'none',
+                maxAge: 1000 * 60 * 60 * 24 * 30
+            })
+            return res.status(200).json({
+                success: true,
+                message: "Login done succesfully",
+                data: {
+                    token: accessToken
                 }
-              })
+            })
         } catch (error) {
-         next(error)
+            next(error)
         }
 
     }
@@ -117,7 +123,6 @@ class authController {
                 let user = await prisma.user.findFirst({
                     where: {
                         refreshToken: refereshToken,
-                        roleId: +roleId,
                         ID: +id,
                         username
                     }

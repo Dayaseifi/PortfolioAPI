@@ -4,7 +4,7 @@ import path from 'path'
 import cookie_parser from 'cookie-parser'
 import errorHandler from './errors/errorHandler'
 import cors from 'cors'
-
+import authRouter from './router/authrouter'
 
 
 dotenv.config({
@@ -23,6 +23,8 @@ app.get('/' , (req : Request , res : Response , next : NextFunction) => {
         next(error)
     }
 })
+
+app.use('/auth' , authRouter)
 
 app.use(errorHandler.error404)
 app.use(errorHandler.unexceptionError)
