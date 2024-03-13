@@ -22,7 +22,7 @@ model User {
   refreshToken String? @db.LongText
 }
 
-model page {
+model Page {
   ID      Int    @id @default(autoincrement())
   name    String @unique
   content String
@@ -51,14 +51,14 @@ model Collaborations {
   endMonth   String?
   endYear    String?
   url        String?
-  logo       logo[]
+  logo       logo?
 }
 
 model Concat {
   ID    Int    @id @default(autoincrement())
   title String @unique
   link  String @unique
-  logo  logo[]
+  logo  logo?
 }
 
 model Image {
@@ -74,7 +74,14 @@ model logo {
   src             String          @unique
   alt             String
   collaboration   Collaborations? @relation(fields: [collaborationID], references: [ID])
-  collaborationID Int?
+  collaborationID Int? @unique
   concat          Concat?         @relation(fields: [concatID], references: [ID])
-  concatID        Int?
+  concatID        Int? @unique
 }
+
+model Setting{
+  ID      Int    @id @default(autoincrement())
+  name    String @unique
+  content String
+}
+
