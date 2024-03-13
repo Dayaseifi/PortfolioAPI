@@ -103,5 +103,18 @@ class ExpertiseController {
             next(error);
         }
     }
+    async getAll(req, res, next) {
+        try {
+            let expertises = await prisma.expertise.findMany();
+            return res.status(200).json({
+                success: true,
+                message: "expertises got succesfully",
+                expertises
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.default = new ExpertiseController;

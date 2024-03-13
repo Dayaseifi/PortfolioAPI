@@ -10,4 +10,5 @@ let exRouter = (0, express_1.Router)();
 exRouter.post('/create', authchecker_1.default, expertise_controller_1.default.create);
 exRouter.put('/update/:id', authchecker_1.default, expertise_controller_1.default.update);
 exRouter.delete('/delete/:id', authchecker_1.default, expertise_controller_1.default.delete);
+exRouter.get('/', authchecker_1.default, expertise_controller_1.default.getAll);
 exports.default = exRouter;
