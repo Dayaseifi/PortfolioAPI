@@ -9,6 +9,70 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  ID           Int     @id @default(autoincrement())
+  username     String  @unique
+  email        String  @unique
+  refreshToken String? @db.LongText
+}
+
+model page {
+  ID      Int    @id @default(autoincrement())
+  name    String @unique
+  content String
+}
+
+model Expertise {
+  ID      Int    @id @default(autoincrement())
+  name    String @unique
+  percent String
+}
+
+model Project {
+  ID           Int     @id @default(autoincrement())
+  name         String  @unique
+  description  String  @unique
+  technologies String  @db.LongText
+  Image        Image[]
+}
+
+model Collaborations {
+  ID         Int     @id @default(autoincrement())
+  name       String  @unique
+  position   String
+  startMonth String
+  startyear  String
+  endMonth   String?
+  endYear    String?
+  url        String?
+  logo       logo[]
+}
+
+model Concat {
+  ID    Int    @id @default(autoincrement())
+  title String @unique
+  link  String @unique
+  logo  logo[]
+}
+
+model Image {
+  ID        Int     @id @default(autoincrement())
+  src       String  @unique
+  alt       String
+  project   Project @relation(fields: [projectID], references: [ID])
+  projectID Int
+}
+
+model logo {
+  ID              Int             @id @default(autoincrement())
+  src             String          @unique
+  alt             String
+  collaboration   Collaborations? @relation(fields: [collaborationID], references: [ID])
+  collaborationID Int?
+  concat          Concat?         @relation(fields: [concatID], references: [ID])
+  concatID        Int?
 }
