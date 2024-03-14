@@ -11,6 +11,8 @@ const errorHandler_1 = __importDefault(require("./errors/errorHandler"));
 const cors_1 = __importDefault(require("cors"));
 const authrouter_1 = __importDefault(require("./router/authrouter"));
 const exrouter_1 = __importDefault(require("./router/exrouter"));
+const express_fileupload_1 = __importDefault(require("express-fileupload"));
+const projectrouter_1 = __importDefault(require("./router/projectrouter"));
 dotenv_1.default.config({
     path: path_1.default.join(__dirname, '..', '.env')
 });
@@ -18,6 +20,7 @@ let app = (0, express_1.default)();
 app.use((0, cors_1.default)({ origin: '*' }));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
+app.use((0, express_fileupload_1.default)());
 app.get('/', (req, res, next) => {
     try {
         res.status(200).json({
@@ -30,6 +33,7 @@ app.get('/', (req, res, next) => {
 });
 app.use('/auth', authrouter_1.default);
 app.use('/ex', exrouter_1.default);
+app.use('/proj', projectrouter_1.default);
 app.use(errorHandler_1.default.error404);
 app.use(errorHandler_1.default.unexceptionError);
 let port = process.env.PORT;
