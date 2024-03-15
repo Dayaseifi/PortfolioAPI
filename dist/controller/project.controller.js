@@ -225,5 +225,54 @@ class ProjectController {
             next(error);
         }
     }
+    async changeImage(req, res, next) {
+        try {
+            let id = req.body.id;
+            if (!req.files?.image || Array.isArray(req.files.image)) {
+                return res.status(404).json({
+                    message: "file doesnt exist",
+                    success: false
+                });
+            }
+            let previmage = await prisma.image.findFirst({
+                where: {
+                    ID: +id
+                }
+            });
+            if (!previmage) {
+                return res.status(404).json({
+                    message: "file doesnt exist",
+                    success: false
+                });
+            }
+            (0, sharp_1.default)(req.files.image.data)
+                .resize(200, 200)
+                .toFile(path_1.default.join(__dirname, '..', '..', 'public', 'images', req.files.image.name), (err) => {
+                if (err) {
+                    next(err);
+                }
+            });
+            let newImage = await prisma.image.update({
+                where: {
+                    ID: +id
+                },
+                data: {
+                    src: path_1.default.join(__dirname, '..', '..', 'public', 'images', req.files.image.name)
+                }
+            });
+            fs_1.default.unlink(previmage?.src, (err) => {
+                if (err) {
+                    return next(err);
+                }
+            });
+            return res.status(200).json({
+                message: "Done",
+                success: true
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.default = new ProjectController;

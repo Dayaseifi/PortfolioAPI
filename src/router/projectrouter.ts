@@ -9,13 +9,15 @@ Projectrouter.post('/create' , ProjectController.create)
 
 Projectrouter.put('/edit/:id' , ProjectController.edit)
 
-Projectrouter.delete('/delete/:id' , ProjectController.delete)
+Projectrouter.put('/change/image' , ProjectController.changeImage)
 
-Projectrouter.get('/' , ProjectController.getAll)
+Projectrouter.delete('/delete/:id' , ProjectController.delete)
 
 Projectrouter.get('/:id', projectController.getById);
 
 Projectrouter.get('/image/:id', projectController.getImages);
+
+Projectrouter.get('/' , ProjectController.getAll)
 
 
 
