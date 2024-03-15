@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import path from "path";
 import sharp from "sharp";
 import fs from 'fs'
+import { fileNameGenerator } from "../utils/RandomFileNameGenerator";
 
 let prisma = new PrismaClient()
 
@@ -31,9 +32,11 @@ class ProjectController {
             let images = Array.isArray(req.files.images) ? req.files.images : [req.files.images]
             let promises = images.map((file: any) => {
                 return new Promise((resolve, reject) => {
+                    let saveFileName = fileNameGenerator(file.name)
+
                     sharp(file.data)
                         .resize(200, 200)
-                        .toFile(path.join(__dirname, '..', '..', 'public', 'images', file.name), (err, info) => {
+                        .toFile(path.join(__dirname, '..', '..', 'public', 'images', saveFileName), (err, info) => {
                             if (err) {
                                 next(err);
                             } else {
@@ -249,9 +252,10 @@ class ProjectController {
                     success: false
                 })
             }
+            let saveFileName = fileNameGenerator(req.files.image.name)
             sharp(req.files.image.data)
                 .resize(200, 200)
-                .toFile(path.join(__dirname, '..', '..', 'public', 'images', req.files.image.name), (err) => {
+                .toFile(path.join(__dirname, '..', '..', 'public', 'images', saveFileName), (err) => {
                     if (err) {
                         next(err);
                     }
@@ -277,6 +281,7 @@ class ProjectController {
             next(error)
         }
     }
+
 }
 
 export default new ProjectController

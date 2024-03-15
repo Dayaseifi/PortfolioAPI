@@ -7,6 +7,7 @@ const client_1 = require("@prisma/client");
 const path_1 = __importDefault(require("path"));
 const sharp_1 = __importDefault(require("sharp"));
 const fs_1 = __importDefault(require("fs"));
+const RandomFileNameGenerator_1 = require("../utils/RandomFileNameGenerator");
 let prisma = new client_1.PrismaClient();
 class ProjectController {
     async create(req, res, next) {
@@ -32,9 +33,10 @@ class ProjectController {
             let images = Array.isArray(req.files.images) ? req.files.images : [req.files.images];
             let promises = images.map((file) => {
                 return new Promise((resolve, reject) => {
+                    let saveFileName = (0, RandomFileNameGenerator_1.fileNameGenerator)(file.name);
                     (0, sharp_1.default)(file.data)
                         .resize(200, 200)
-                        .toFile(path_1.default.join(__dirname, '..', '..', 'public', 'images', file.name), (err, info) => {
+                        .toFile(path_1.default.join(__dirname, '..', '..', 'public', 'images', saveFileName), (err, info) => {
                         if (err) {
                             next(err);
                         }
@@ -245,9 +247,10 @@ class ProjectController {
                     success: false
                 });
             }
+            let saveFileName = (0, RandomFileNameGenerator_1.fileNameGenerator)(req.files.image.name);
             (0, sharp_1.default)(req.files.image.data)
                 .resize(200, 200)
-                .toFile(path_1.default.join(__dirname, '..', '..', 'public', 'images', req.files.image.name), (err) => {
+                .toFile(path_1.default.join(__dirname, '..', '..', 'public', 'images', saveFileName), (err) => {
                 if (err) {
                     next(err);
                 }
