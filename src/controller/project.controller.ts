@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { NextFunction, Request, Response } from "express";
 import path from "path";
 import sharp from "sharp";
+import fs from 'fs'
 
 let prisma = new PrismaClient()
 
@@ -53,7 +54,7 @@ class ProjectController {
                 return new Promise(async (resolve, reject) => {
                     await prisma.image.create({
                         data : {
-                            alt : 'Project photo',
+                            alt : `${name} photo`,
                             src : path.join(__dirname , '..' , '..' , 'public' , 'images' , file.fileName ),
                             projectID : madeProject.ID
                         }
@@ -71,6 +72,148 @@ class ProjectController {
  next(error)
         }
     }
+    async edit(req: Request, res: Response, next: NextFunction){
+        try {
+            let id = req.params.id
+            let { name, description, technology } = req.body
+            if (req.files?.slider) {
+                
+            }
+            else{
+             let proj = await prisma.project.findFirst({
+                where : {
+                    ID : +id
+                },
+                select : {
+                    ID : true
+                }
+             })
+             if (!proj) {
+                return res.status(404).json({
+                    success : false,
+                    message : "This project doesnt exist on system"
+                })
+             }
+             await prisma.project.update({
+                where : {
+                    ID : +id
+                },
+                data : {
+                    description , name , technologies : technology
+                }
+             })
+            }
+        } catch (error) {
+            next(error)
+        }
+    }
+    async delete(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id;
+    
+            // Check if the project exists
+            const existingProject = await prisma.project.findFirst({
+                where: {
+                    ID: +id
+                }
+            });
+    
+            // If the project doesn't exist, return 404
+            if (!existingProject) {
+                return res.status(404).json({
+                    success: false,
+                    message: "This project doesn't exist in the system"
+                });
+            }
+    
+            // Fetch associated images for deletion
+            const projectImages = await prisma.image.findMany({
+                where: {
+                    projectID: +id
+                }
+            });
+    
+            // Delete associated image files from the system
+            const deletePromises = projectImages.map(async (image) => {
+                fs.unlink(path.join(image.src) , (err) => {
+                    if (err) {
+                        next(err)
+                    }
+                });
+            });
+    
+            // Wait for all image files to be deleted
+            await Promise.all(deletePromises);
+    
+            // Delete project images from database
+            await prisma.image.deleteMany({
+                where: {
+                    projectID: +id
+                }
+            });
+    
+            // Delete project
+            await prisma.project.delete({
+                where: {
+                    ID: +id
+                }
+            });
+    
+            return res.status(200).json({
+                success: true,
+                message: "Project deleted successfully"
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+    async getAll(req: Request, res: Response, next: NextFunction){
+        try {
+            let projects = await prisma.project.findMany({
+                include : {
+                    Image : true
+                }
+            })
+            return res.status(200).json({
+                success : true,
+                message : "Projects got succesfullly",
+                projects
+            })
+        } catch (error) {
+           next(error) 
+        }
+    }
+    async getById(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id;
+    
+            // Find the project by ID and include its associated images
+            const projectWithImages = await prisma.project.findFirst({
+                where: {
+                    ID: +id
+                },
+                include: {
+                    Image: true
+                }
+            });
+    
+            // If the project doesn't exist, return 404
+            if (!projectWithImages) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Project not found"
+                });
+            }
+    
+            return res.status(200).json({
+                success: true,
+                project: projectWithImages
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+    
 }
 
 export default new ProjectController
