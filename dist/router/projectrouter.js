@@ -12,4 +12,5 @@ Projectrouter.put('/edit/:id', project_controller_1.default.edit);
 Projectrouter.delete('/delete/:id', project_controller_1.default.delete);
 Projectrouter.get('/', project_controller_1.default.getAll);
 Projectrouter.get('/:id', project_controller_2.default.getById);
+Projectrouter.get('/image/:id', project_controller_2.default.getImages);
 exports.default = Projectrouter;

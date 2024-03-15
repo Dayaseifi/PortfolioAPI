@@ -208,5 +208,22 @@ class ProjectController {
             next(error);
         }
     }
+    async getImages(req, res, next) {
+        try {
+            let id = req.params.id;
+            let images = await prisma.image.findMany({
+                where: {
+                    projectID: +id
+                }
+            });
+            return res.status(200).json({
+                message: "image got succesfully",
+                images
+            });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
 }
 exports.default = new ProjectController;

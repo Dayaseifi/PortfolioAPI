@@ -15,6 +15,8 @@ Projectrouter.get('/' , ProjectController.getAll)
 
 Projectrouter.get('/:id', projectController.getById);
 
+Projectrouter.get('/image/:id', projectController.getImages);
+
 
 
 

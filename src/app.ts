@@ -18,6 +18,7 @@ app.use(cors({origin : '*'}))
 app.use(cookie_parser())
 app.use(express.json())
 app.use(expressFileUpload())
+app.use('/public/images',express.static(path.join(__dirname , '..' , 'public' , 'images')))
 app.get('/' , (req : Request , res : Response , next : NextFunction) => {
     try {
         res.status(200).json({
