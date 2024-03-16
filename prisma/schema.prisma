@@ -57,6 +57,7 @@ model Concat {
 
 model Image {
   ID        Int     @id @default(autoincrement())
+  fileName  String  @unique
   src       String  @unique
   alt       String
   project   Project @relation(fields: [projectID], references: [ID])
@@ -67,15 +68,15 @@ model logo {
   ID              Int             @id @default(autoincrement())
   src             String          @unique
   alt             String
+  fileName        String          @unique
   collaboration   Collaborations? @relation(fields: [collaborationID], references: [ID])
-  collaborationID Int? @unique
+  collaborationID Int?            @unique
   concat          Concat?         @relation(fields: [concatID], references: [ID])
-  concatID        Int? @unique
+  concatID        Int?            @unique
 }
 
-model Setting{
+model Setting {
   ID      Int    @id @default(autoincrement())
   name    String @unique
   content String
 }
-
