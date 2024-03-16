@@ -33,14 +33,14 @@ class ProjectController {
             let promises = images.map((file: any) => {
                 return new Promise((resolve, reject) => {
                     let saveFileName = fileNameGenerator(file.name)
-
+                    
                     sharp(file.data)
                         .resize(200, 200)
                         .toFile(path.join(__dirname, '..', '..', 'public', 'images', saveFileName), (err, info) => {
                             if (err) {
                                 next(err);
                             } else {
-                                resolve({ fileName: file.name });
+                                resolve({ fileName: saveFileName });
                             }
                         });
                 });
@@ -59,7 +59,8 @@ class ProjectController {
                         data: {
                             alt: `${name} photo`,
                             src: path.join(__dirname, '..', '..', 'public', 'images', file.fileName),
-                            projectID: madeProject.ID
+                            projectID: madeProject.ID,
+                            fileName : file
                         }
                     })
                     resolve(true);

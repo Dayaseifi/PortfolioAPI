@@ -41,7 +41,7 @@ class ProjectController {
                             next(err);
                         }
                         else {
-                            resolve({ fileName: file.name });
+                            resolve({ fileName: saveFileName });
                         }
                     });
                 });
@@ -60,7 +60,8 @@ class ProjectController {
                         data: {
                             alt: `${name} photo`,
                             src: path_1.default.join(__dirname, '..', '..', 'public', 'images', file.fileName),
-                            projectID: madeProject.ID
+                            projectID: madeProject.ID,
+                            fileName: file
                         }
                     });
                     resolve(true);
