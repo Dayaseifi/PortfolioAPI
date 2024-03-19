@@ -55,13 +55,14 @@ class ProjectController {
                 }
             });
             let imagePromises = imagesInfo.map((file) => {
+                console.log(file.fileName);
                 return new Promise(async (resolve, reject) => {
                     await prisma.image.create({
                         data: {
                             alt: `${name} photo`,
                             src: path_1.default.join(__dirname, '..', '..', 'public', 'images', file.fileName),
                             projectID: madeProject.ID,
-                            fileName: file
+                            fileName: file.fileName
                         }
                     });
                     resolve(true);
