@@ -1,0 +1,87 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const timecontroller_1 = require("../utils/timecontroller");
+const client_1 = require("@prisma/client");
+const sharp_1 = __importDefault(require("sharp"));
+const RandomFileNameGenerator_1 = require("../utils/RandomFileNameGenerator");
+const path_1 = __importDefault(require("path"));
+let prisma = new client_1.PrismaClient();
+class callobrationController {
+    async create(req, res, next) {
+        let { name, position, startMonth, startyear, endMonth, endYear, url } = req.body;
+        let logo = req.files?.logo;
+        let timeControllerChecker = (0, timecontroller_1.timeController)(parseInt(startyear), parseInt(endYear), parseInt(startMonth), parseInt(endMonth));
+        if (!timeControllerChecker.success) {
+            return res.status(400).json({
+                success: false,
+                messasge: timeControllerChecker.Problem == "Now" ? "You have problem at setting time" : "time can not be in feature"
+            });
+        }
+        let callobration = await prisma.collaborations.findFirst({
+            where: {
+                name
+            }
+        });
+        if (callobration) {
+            return res.status(400).json({
+                success: false,
+                messasge: "this name is existing on system"
+            });
+        }
+        logo = Array.isArray(logo) ? logo[0] : logo;
+        if (logo) {
+            let saveFileName = (0, RandomFileNameGenerator_1.fileNameGenerator)(logo.name);
+            // Continue processing the logo file (e.g., resizing)
+            (0, sharp_1.default)(logo.data)
+                .resize(200, 200)
+                .toFile(path_1.default.join(__dirname, '..', '..', 'public', 'images', saveFileName), async (err, info) => {
+                if (err) {
+                    next(err);
+                }
+                else {
+                    const logoData = {
+                        src: saveFileName,
+                        alt: name + ' alt',
+                        fileName: saveFileName
+                    };
+                    const insertedLogo = await prisma.logo.create({
+                        data: logoData
+                    });
+                    await prisma.collaborations.create({
+                        data: {
+                            name,
+                            position,
+                            startMonth,
+                            startyear,
+                            endMonth,
+                            endYear,
+                            url
+                        }
+                    });
+                    return res.status(201).json({
+                        success: true,
+                        message: "This collaboration has been added to your portfolio"
+                    });
+                }
+            });
+        }
+        else {
+            await prisma.collaborations.create({
+                data: {
+                    name,
+                    position,
+                    startMonth,
+                    startyear, endMonth, endYear, url
+                }
+            });
+            return res.status(201).json({
+                success: true,
+                message: "This callobration add to your portfolio"
+            });
+        }
+    }
+}
+exports.default = new callobrationController;

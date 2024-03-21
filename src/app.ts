@@ -8,6 +8,7 @@ import authRouter from './router/authrouter'
 import exRouter from './router/exrouter'
 import expressFileUpload from 'express-fileupload'
 import Projectrouter from './router/projectrouter'
+import callRouter from './router/callo.router'
 
 
 dotenv.config({
@@ -32,6 +33,7 @@ app.get('/' , (req : Request , res : Response , next : NextFunction) => {
 app.use('/auth' , authRouter)
 app.use('/ex' , exRouter)
 app.use('/proj' , Projectrouter)
+app.use("/cal" , callRouter)
 app.use(errorHandler.error404)
 app.use(errorHandler.unexceptionError)
 let port = process.env.PORT

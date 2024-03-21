@@ -13,6 +13,7 @@ const authrouter_1 = __importDefault(require("./router/authrouter"));
 const exrouter_1 = __importDefault(require("./router/exrouter"));
 const express_fileupload_1 = __importDefault(require("express-fileupload"));
 const projectrouter_1 = __importDefault(require("./router/projectrouter"));
+const callo_router_1 = __importDefault(require("./router/callo.router"));
 dotenv_1.default.config({
     path: path_1.default.join(__dirname, '..', '.env')
 });
@@ -35,6 +36,7 @@ app.get('/', (req, res, next) => {
 app.use('/auth', authrouter_1.default);
 app.use('/ex', exrouter_1.default);
 app.use('/proj', projectrouter_1.default);
+app.use("/cal", callo_router_1.default);
 app.use(errorHandler_1.default.error404);
 app.use(errorHandler_1.default.unexceptionError);
 let port = process.env.PORT;
