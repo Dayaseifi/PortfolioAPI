@@ -103,6 +103,43 @@ class callobrationController {
             next(error)
         }
     }
+    async getOne(req: Request, res: Response, next: NextFunction){
+        try {
+            const id = req.params.id;
+
+            // Find the project by ID and include its associated images
+            const calloWithImages = await prisma.collaborations.findFirst({
+                where: {
+                    ID: +id
+                },
+                include: {
+                    logo : {
+                        select : {
+                            ID : true,
+                            alt : true,
+                            fileName : true,
+                            src : true
+                        }
+                    }
+                }
+            });
+
+            // If the project doesn't exist, return 404
+            if (!calloWithImages) {
+                return res.status(404).json({
+                    success: false,
+                    message: "collaboration  not found"
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                project: calloWithImages
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export default new callobrationController

@@ -7,5 +7,6 @@ const express_1 = require("express");
 const Collaboration_controller_1 = __importDefault(require("../controller/Collaboration.controller"));
 let callRouter = (0, express_1.Router)();
 callRouter.get("/", Collaboration_controller_1.default.getAll);
+callRouter.get("/:id", Collaboration_controller_1.default.getOne);
 callRouter.post("/create", Collaboration_controller_1.default.create);
 exports.default = callRouter;

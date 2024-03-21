@@ -5,6 +5,9 @@ let callRouter = Router()
 
 callRouter.get("/" , callController.getAll)
 
+callRouter.get("/:id" , callController.getOne)
+
+
 callRouter.post("/create" , callController.create)
 
 export default callRouter;
