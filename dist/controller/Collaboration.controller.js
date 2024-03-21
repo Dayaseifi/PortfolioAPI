@@ -42,15 +42,7 @@ class callobrationController {
                     next(err);
                 }
                 else {
-                    const logoData = {
-                        src: saveFileName,
-                        alt: name + ' alt',
-                        fileName: saveFileName
-                    };
-                    const insertedLogo = await prisma.logo.create({
-                        data: logoData
-                    });
-                    await prisma.collaborations.create({
+                    let newCallo = await prisma.collaborations.create({
                         data: {
                             name,
                             position,
@@ -59,6 +51,14 @@ class callobrationController {
                             endMonth,
                             endYear,
                             url
+                        }
+                    });
+                    const insertedLogo = await prisma.logo.create({
+                        data: {
+                            src: saveFileName,
+                            alt: name + ' alt',
+                            fileName: saveFileName,
+                            collaborationID: newCallo.ID
                         }
                     });
                     return res.status(201).json({
@@ -81,6 +81,30 @@ class callobrationController {
                 success: true,
                 message: "This callobration add to your portfolio"
             });
+        }
+    }
+    async getAll(req, res, next) {
+        try {
+            let callos = await prisma.collaborations.findMany({
+                include: {
+                    logo: {
+                        select: {
+                            ID: true,
+                            alt: true,
+                            fileName: true,
+                            src: true
+                        }
+                    }
+                }
+            });
+            return res.status(200).json({
+                success: false,
+                message: "callos got succesfully",
+                callos
+            });
+        }
+        catch (error) {
+            next(error);
         }
     }
 }

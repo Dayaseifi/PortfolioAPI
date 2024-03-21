@@ -45,7 +45,7 @@ model Collaborations {
   endMonth   String?
   endYear    String?
   url        String?
-  logo       logo?
+  logo       logo?  
 }
 
 model Concat {
