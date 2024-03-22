@@ -260,6 +260,80 @@ class callobrationController {
 
         }
     }
+    async addOrchangeImage(req: Request, res: Response, next: NextFunction) {
+        try {
+            let id = req.params.id
+            let coll = await prisma.collaborations.findFirst({
+                where : {
+                    ID : +id
+                },
+                include : {
+                    logo : true
+                }
+            })
+            if (!coll) {
+                return res.status(404).json({
+                    success : false,
+                    message : "Coll doesnt find"
+                })
+            }
+            if (req.files?.logo) {
+                let logo = req.files?.logo
+                logo = Array.isArray(logo) ? logo[0] : logo
+                let saveFileName = fileNameGenerator(logo.name);
+                sharp(logo.data)
+                    .resize(200, 200)
+                    .toFile(path.join(__dirname, '..', '..', 'public', 'images', saveFileName), (err, info) => {
+                        if (err) {
+                            return next(err)
+                        }
+                    })
+                if (!coll.logo) {
+                    await prisma.logo.create({
+                        data: {
+                            src: path.join(__dirname, '..', '..', 'public', 'images', saveFileName),
+                            alt: name + ' alt',
+                            fileName: saveFileName,
+                            collaborationID: coll.ID
+                        }
+                    })
+                    return res.status(200).json({
+                        message : "i=Image added succesfully",
+                        success : true
+                    })
+                }
+                else{
+                    await prisma.logo.update({
+                        data: {
+                            src: path.join(__dirname, '..', '..', 'public', 'images', saveFileName),
+                            fileName: saveFileName,
+                            collaborationID: coll.ID
+                        },
+                        where : {
+                            ID : coll.logo.ID
+                        }
+                    })
+                    fs.unlink(coll.logo.src , (err) => {
+                        if (err) {
+                            next(err)
+                        }
+                    })
+                    return res.status(200).json({
+                        message : "Image added succesfully",
+                        success : true
+                    })
+                }
+            }
+            else {
+               return res.status(404).json({
+                success : false,
+                message : "logo doesnt exist"
+               })
+            }
+        } catch (error) {
+ next(error)
+        }
+    }
     async delete(req: Request, res: Response, next: NextFunction) {
         try {
             let id = req.params.id

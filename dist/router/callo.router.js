@@ -10,5 +10,6 @@ callRouter.get("/", Collaboration_controller_1.default.getAll);
 callRouter.get("/:id", Collaboration_controller_1.default.getOne);
 callRouter.post("/create", Collaboration_controller_1.default.create);
 callRouter.put("/edit/:id", Collaboration_controller_1.default.edit);
+callRouter.patch("/edit/image/:id", Collaboration_controller_1.default.addOrchangeImage);
 callRouter.delete("/delete/:id", Collaboration_controller_1.default.delete);
 exports.default = callRouter;

@@ -11,6 +11,9 @@ callRouter.post("/create" , callController.create)
 
 callRouter.put("/edit/:id" , callController.edit)
 
+callRouter.patch("/edit/image/:id" , callController.addOrchangeImage)
+
+
 callRouter.delete("/delete/:id" , callController.delete)
 
 
