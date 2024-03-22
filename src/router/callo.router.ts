@@ -7,7 +7,9 @@ callRouter.get("/" , callController.getAll)
 
 callRouter.get("/:id" , callController.getOne)
 
-
 callRouter.post("/create" , callController.create)
+
+callRouter.delete("/delete/:id" , callController.delete)
+
 
 export default callRouter;

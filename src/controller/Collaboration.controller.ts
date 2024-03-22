@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client"
 import sharp from "sharp"
 import { fileNameGenerator } from "../utils/RandomFileNameGenerator"
 import path from "path"
+import fs from "fs"
 let prisma = new PrismaClient()
 
 class callobrationController {
@@ -38,7 +39,7 @@ class callobrationController {
                 .toFile(path.join(__dirname, '..', '..', 'public', 'images', saveFileName), async (err, info) => {
                     if (err) {
                         next(err);
-                    } else {               
+                    } else {
                         let newCallo = await prisma.collaborations.create({
                             data: {
                                 name,
@@ -47,14 +48,15 @@ class callobrationController {
                                 startyear,
                                 endMonth,
                                 endYear,
-                                url                            }
+                                url
+                            }
                         });
                         const insertedLogo = await prisma.logo.create({
                             data: {
-                                src: saveFileName,
+                                src: path.join(__dirname , '..' , '..' , 'public' , 'images' , saveFileName),
                                 alt: name + ' alt',
                                 fileName: saveFileName,
-                                collaborationID : newCallo.ID
+                                collaborationID: newCallo.ID
                             }
                         });
                         return res.status(201).json({
@@ -83,27 +85,27 @@ class callobrationController {
     async getAll(req: Request, res: Response, next: NextFunction) {
         try {
             let callos = await prisma.collaborations.findMany({
-                include : {
-                    logo  : {
-                        select : {
-                            ID : true,
-                            alt : true,
-                            fileName : true,
-                            src : true
+                include: {
+                    logo: {
+                        select: {
+                            ID: true,
+                            alt: true,
+                            fileName: true,
+                            src: true
                         }
                     }
                 }
             })
             return res.status(200).json({
-                success : false,
-                message : "callos got succesfully",
+                success: false,
+                message: "callos got succesfully",
                 callos
             })
         } catch (error) {
             next(error)
         }
     }
-    async getOne(req: Request, res: Response, next: NextFunction){
+    async getOne(req: Request, res: Response, next: NextFunction) {
         try {
             const id = req.params.id;
 
@@ -113,12 +115,12 @@ class callobrationController {
                     ID: +id
                 },
                 include: {
-                    logo : {
-                        select : {
-                            ID : true,
-                            alt : true,
-                            fileName : true,
-                            src : true
+                    logo: {
+                        select: {
+                            ID: true,
+                            alt: true,
+                            fileName: true,
+                            src: true
                         }
                     }
                 }
@@ -138,6 +140,68 @@ class callobrationController {
             });
         } catch (error) {
             next(error);
+        }
+    }
+    async edit(req: Request, res: Response, next: NextFunction) {
+        try {
+
+        } catch (error) {
+
+        }
+    }
+    async delete(req: Request, res: Response, next: NextFunction) {
+        try {
+            let id = req.params.id
+            let coll = await prisma.collaborations.findFirst({
+                where: {
+                    ID: +id
+                },
+                include : {
+                    logo : true
+                }
+            })
+            if (!coll) {
+                return res.status(404).json({
+                    success: false,
+                    message: "This porfolio doesnt exist"
+                })
+            }
+            if (coll.logo) {
+                await prisma.collaborations.delete({
+                    where : {
+                        ID : +id
+                    }
+                })
+
+                await prisma.logo.delete({
+                    where : {
+                        collaborationID : +id
+                    }
+                })
+                fs.unlink(coll.logo.src , (err) => {
+                    if (err) {
+                        return next(err)
+                    }
+                })
+                return res.status(200).json({
+                    success : false,
+                    message : "delete done succesfully"
+                })
+                
+            }
+            else{
+                await prisma.collaborations.delete({
+                    where : {
+                        ID : +id
+                    }
+                })
+                return res.status(200).json({
+                    success : false,
+                    message : "delete done succesfully"
+                })
+            }
+        } catch (error) {
+             next(error)
         }
     }
 }

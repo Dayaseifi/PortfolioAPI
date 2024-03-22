@@ -8,6 +8,7 @@ const client_1 = require("@prisma/client");
 const sharp_1 = __importDefault(require("sharp"));
 const RandomFileNameGenerator_1 = require("../utils/RandomFileNameGenerator");
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 let prisma = new client_1.PrismaClient();
 class callobrationController {
     async create(req, res, next) {
@@ -55,7 +56,7 @@ class callobrationController {
                     });
                     const insertedLogo = await prisma.logo.create({
                         data: {
-                            src: saveFileName,
+                            src: path_1.default.join(__dirname, '..', '..', 'public', 'images', saveFileName),
                             alt: name + ' alt',
                             fileName: saveFileName,
                             collaborationID: newCallo.ID
@@ -137,6 +138,66 @@ class callobrationController {
                 success: true,
                 project: calloWithImages
             });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async edit(req, res, next) {
+        try {
+        }
+        catch (error) {
+        }
+    }
+    async delete(req, res, next) {
+        try {
+            let id = req.params.id;
+            let coll = await prisma.collaborations.findFirst({
+                where: {
+                    ID: +id
+                },
+                include: {
+                    logo: true
+                }
+            });
+            if (!coll) {
+                return res.status(404).json({
+                    success: false,
+                    message: "This porfolio doesnt exist"
+                });
+            }
+            if (coll.logo) {
+                await prisma.collaborations.delete({
+                    where: {
+                        ID: +id
+                    }
+                });
+                await prisma.logo.delete({
+                    where: {
+                        collaborationID: +id
+                    }
+                });
+                fs_1.default.unlink(coll.logo.src, (err) => {
+                    if (err) {
+                        return next(err);
+                    }
+                });
+                return res.status(200).json({
+                    success: false,
+                    message: "delete done succesfully"
+                });
+            }
+            else {
+                await prisma.collaborations.delete({
+                    where: {
+                        ID: +id
+                    }
+                });
+                return res.status(200).json({
+                    success: false,
+                    message: "delete done succesfully"
+                });
+            }
         }
         catch (error) {
             next(error);
