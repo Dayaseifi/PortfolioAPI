@@ -53,7 +53,7 @@ class callobrationController {
                         });
                         const insertedLogo = await prisma.logo.create({
                             data: {
-                                src: path.join(__dirname , '..' , '..' , 'public' , 'images' , saveFileName),
+                                src: path.join(__dirname, '..', '..', 'public', 'images', saveFileName),
                                 alt: name + ' alt',
                                 fileName: saveFileName,
                                 collaborationID: newCallo.ID
@@ -144,7 +144,118 @@ class callobrationController {
     }
     async edit(req: Request, res: Response, next: NextFunction) {
         try {
+            let id = req.params.id
+            let { name, position, startMonth, startyear, endMonth, endYear, url } = req.body
 
+            let timeControllerChecker = timeController(parseInt(startyear), parseInt(endYear), parseInt(startMonth), parseInt(endMonth))
+            if (!timeControllerChecker.success) {
+                return res.status(400).json({
+                    success: false,
+                    messasge: timeControllerChecker.Problem == "Now" ? "You have problem at setting time" : "time can not be in feature"
+                })
+            }
+            let callobration = await prisma.collaborations.findFirst({
+                where: {
+                    ID: +id
+                },
+                include: {
+                    logo: {
+                        select: {
+                            ID: true,
+                            src: true
+                        }
+                    }
+                }
+            })
+            if (!callobration) {
+                return res.status(400).json({
+                    success: false,
+                    messasge: "this coll does not existing on system"
+                })
+            }
+            if (req.files?.logo) {
+                let logo = req.files?.logo
+                logo = Array.isArray(logo) ? logo[0] : logo
+                let saveFileName = fileNameGenerator(logo.name);
+
+                // Continue processing the logo file (e.g., resizing)
+                sharp(logo.data)
+                    .resize(200, 200)
+                    .toFile(path.join(__dirname, '..', '..', 'public', 'images', saveFileName), async (err, info) => {
+                        if (err) {
+                            next(err);
+                        } else {
+                            if (callobration?.logo) {
+                                let deleteImageSRC = callobration.logo.src
+                                await prisma.logo.update({
+                                    where: {
+                                        ID: callobration.logo.ID
+                                    },
+                                    data: {
+                                        src: path.join(__dirname, '..', '..', 'public', 'images', saveFileName),
+                                        alt: name + ' alt',
+                                        fileName: saveFileName
+                                    }
+                                })
+                                await prisma.collaborations.update({
+                                    where: {
+                                        ID: +id
+                                    },
+                                    data: {
+                                        name, position, startMonth, startyear, endMonth, endYear, url
+                                    }
+                                })
+                                fs.unlink(deleteImageSRC, (err) => {
+                                    if (err) {
+                                        next(err)
+                                    }
+                                })
+                                return res.status(200).json({
+                                    success: true,
+                                    message: "update done succesfully"
+                                })
+                            }
+                            else {
+                                await prisma.logo.create({
+                                    data: {
+                                        src: path.join(__dirname, '..', '..', 'public', 'images', saveFileName),
+                                        alt: name + ' alt',
+                                        fileName: saveFileName,
+                                        collaborationID: callobration?.ID
+                                    }
+                                })
+                                await prisma.collaborations.update({
+                                    where: {
+                                        ID: +id
+                                    },
+                                    data: {
+                                        name, position, startMonth, startyear, endMonth, endYear, url
+                                    }
+                                })
+                                return res.status(200).json({
+                                    success: true,
+                                    message: "delete done succesfully"
+                                })
+                            }
+
+                        }
+                    });
+
+            }
+            else {
+                await prisma.collaborations.update({
+                    where: {
+                        ID: +id
+                    },
+                    data: {
+                        name, position, startMonth, startyear, endMonth, endYear, url
+                    }
+                })
+                return res.status(200).json({
+                    success: true,
+                    message: "update done succesfully"
+                })
+            }
         } catch (error) {
 
         }
@@ -156,8 +267,8 @@ class callobrationController {
                 where: {
                     ID: +id
                 },
-                include : {
-                    logo : true
+                include: {
+                    logo: true
                 }
             })
             if (!coll) {
@@ -168,42 +279,43 @@ class callobrationController {
             }
             if (coll.logo) {
                 await prisma.collaborations.delete({
-                    where : {
-                        ID : +id
+                    where: {
+                        ID: +id
                     }
                 })
 
                 await prisma.logo.delete({
-                    where : {
-                        collaborationID : +id
+                    where: {
+                        collaborationID: +id
                     }
                 })
-                fs.unlink(coll.logo.src , (err) => {
+                fs.unlink(coll.logo.src, (err) => {
                     if (err) {
                         return next(err)
                     }
                 })
                 return res.status(200).json({
-                    success : false,
-                    message : "delete done succesfully"
+                    success: false,
+                    message: "delete done succesfully"
                 })
-                
+
             }
-            else{
+            else {
                 await prisma.collaborations.delete({
-                    where : {
-                        ID : +id
+                    where: {
+                        ID: +id
                     }
                 })
                 return res.status(200).json({
-                    success : false,
-                    message : "delete done succesfully"
+                    success: false,
+                    message: "delete done succesfully"
                 })
             }
         } catch (error) {
-             next(error)
+            next(error)
         }
     }
+
 }
 
 export default new callobrationController

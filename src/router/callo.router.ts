@@ -9,6 +9,8 @@ callRouter.get("/:id" , callController.getOne)
 
 callRouter.post("/create" , callController.create)
 
+callRouter.put("/edit/:id" , callController.edit)
+
 callRouter.delete("/delete/:id" , callController.delete)
 
 
