@@ -7,6 +7,7 @@ const client_1 = require("@prisma/client");
 const sharp_1 = __importDefault(require("sharp"));
 const RandomFileNameGenerator_1 = require("../utils/RandomFileNameGenerator");
 const path_1 = __importDefault(require("path"));
+const fs_1 = require("fs");
 let prisma = new client_1.PrismaClient();
 class ConcarController {
     async create(req, res, next) {
@@ -50,7 +51,7 @@ class ConcarController {
                     data: {
                         alt: `${title} alt`,
                         fileName: saveFileName,
-                        collaborationID: newConcat.ID,
+                        concatID: newConcat.ID,
                         src: path_1.default.join(__dirname, '..', '..', 'public', 'images', saveFileName)
                     }
                 });
@@ -60,6 +61,112 @@ class ConcarController {
                 });
             }
             else {
+                let newConcat = await prisma.concat.create({
+                    data: {
+                        title, link
+                    }
+                });
+                return res.status(201).json({
+                    success: true,
+                    message: "link creation done succesfully"
+                });
+            }
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async getAll(req, res, next) {
+        try {
+            const concats = await prisma.concat.findMany({
+                include: {
+                    logo: {
+                        select: {
+                            alt: true,
+                            fileName: true,
+                            ID: true
+                        }
+                    }
+                }
+            });
+            res.status(200).json({ concats, success: true });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async getById(req, res, next) {
+        const { id } = req.params;
+        try {
+            const concat = await prisma.concat.findUnique({
+                where: {
+                    ID: parseInt(id)
+                },
+                include: {
+                    logo: {
+                        select: {
+                            alt: true,
+                            fileName: true,
+                            ID: true
+                        }
+                    }
+                }
+            });
+            if (!concat) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Concat not found"
+                });
+            }
+            res.status(200).json({ concat, success: true, });
+        }
+        catch (error) {
+            next(error);
+        }
+    }
+    async delete(req, res, next) {
+        const { id } = req.params;
+        try {
+            // Check if Concat exists
+            const concat = await prisma.concat.findUnique({
+                where: {
+                    ID: parseInt(id)
+                },
+                include: {
+                    logo: true // Fetch associated logo
+                }
+            });
+            if (!concat) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Concat not found"
+                });
+            }
+            // Delete associated logo if it exists
+            if (concat.logo) {
+                await prisma.logo.delete({
+                    where: {
+                        ID: concat.logo.ID
+                    }
+                });
+                // Remove logo file from filesystem
+                const logoFilePath = concat.logo.src;
+                // Add logic to delete the file using fs.unlink or similar
+                (0, fs_1.unlink)(logoFilePath, (err) => {
+                    if (err) {
+                        return next(err);
+                    }
+                });
+                // Now, delete the Concat
+                const deletedConcat = await prisma.concat.delete({
+                    where: {
+                        ID: parseInt(id)
+                    }
+                });
+                res.status(200).json({
+                    message: "delete done succesfully",
+                    success: false
+                });
             }
         }
         catch (error) {
