@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { fileNameGenerator } from "../utils/RandomFileNameGenerator";
 import path from "path";
 import { unlink } from "fs";
+import { error } from "console";
 let prisma = new PrismaClient()
 
 class ConcarController {
@@ -71,7 +72,7 @@ class ConcarController {
         } catch (error) {
             next(error)
         }
-        
+
     }
     async getAll(req: Request, res: Response, next: NextFunction) {
         try {
@@ -86,7 +87,7 @@ class ConcarController {
                     }
                 }
             });
-            res.status(200).json({concats , success : true});
+            res.status(200).json({ concats, success: true });
         } catch (error) {
             next(error);
         }
@@ -115,7 +116,7 @@ class ConcarController {
                     message: "Concat not found"
                 });
             }
-            res.status(200).json({concat , success : true ,});
+            res.status(200).json({ concat, success: true, });
         } catch (error) {
             next(error);
         }
@@ -124,56 +125,163 @@ class ConcarController {
     async delete(req: Request, res: Response, next: NextFunction) {
         const { id } = req.params;
         try {
-          // Check if Concat exists
-          const concat = await prisma.concat.findUnique({
-            where: {
-              ID: parseInt(id)
-            },
-            include: {
-              logo: true // Fetch associated logo
-            }
-          });
-          if (!concat) {
-            return res.status(404).json({
-              success: false,
-              message: "Concat not found"
-            });
-          }
-          
-          // Delete associated logo if it exists
-          if (concat.logo) {
-            await prisma.logo.delete({
-              where: {
-                ID: concat.logo.ID
-              }
-            });
-            
-            // Remove logo file from filesystem
-            const logoFilePath = concat.logo.src;
-            // Add logic to delete the file using fs.unlink or similar
-            unlink(logoFilePath , (err) => {
-                if (err) {
-                    return next(err)
+            // Check if Concat exists
+            const concat = await prisma.concat.findUnique({
+                where: {
+                    ID: parseInt(id)
+                },
+                include: {
+                    logo: true // Fetch associated logo
                 }
-            })
-            // Now, delete the Concat
-            const deletedConcat = await prisma.concat.delete({
-              where: {
-                ID: parseInt(id)
-              }
             });
-      
-            res.status(200).json({
-                message : "delete done succesfully",
-                success : false
-            });
-          }
+            if (!concat) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Concat not found"
+                });
+            }
+
+            // Delete associated logo if it exists
+            if (concat.logo) {
+                await prisma.logo.delete({
+                    where: {
+                        ID: concat.logo.ID
+                    }
+                });
+
+                // Remove logo file from filesystem
+                const logoFilePath = concat.logo.src;
+                // Add logic to delete the file using fs.unlink or similar
+                unlink(logoFilePath, (err) => {
+                    if (err) {
+                        return next(err)
+                    }
+                })
+                // Now, delete the Concat
+                const deletedConcat = await prisma.concat.delete({
+                    where: {
+                        ID: parseInt(id)
+                    }
+                });
+
+                res.status(200).json({
+                    message: "delete done succesfully",
+                    success: false
+                });
+            }
         } catch (error) {
-          next(error);
+            next(error);
         }
-      }
-      
-      
+    }
+    async edit(req: Request, res: Response, next: NextFunction) {
+        let { title, link } = req.body
+        try {
+            let id = req.params.id
+            const concatToUpdate = await prisma.concat.findUnique({
+                where: {
+                    ID: +id
+                },
+                include: {
+                    logo: true // Fetch associated logo if it exists
+                }
+            });
+            if (!concatToUpdate) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Concat not found"
+                });
+            }
+            if (req.files?.logo) {
+                // If a new logo is uploaded
+                const newLogo = Array.isArray(req.files.logo) ? req.files.logo[0] : req.files.logo;
+
+                let saveFileName = fileNameGenerator(newLogo.name);
+                let source = path.join(__dirname, '..', '..', 'public', 'images', saveFileName)
+                sharp(newLogo.data)
+                    .resize(200, 200)
+                    .toFile(source, (err, info) => {
+                        if (err) {
+                            return next(err)
+                        }
+                    })
+                    console.log(concatToUpdate.logo);
+                if (concatToUpdate.logo) {
+                    await prisma.logo.update({
+                        where: {
+                            concatID: +id
+                        },
+                        data: {
+                            alt: `${title} logo`,
+                            fileName: saveFileName,
+                            src: source
+                        }
+                    })
+                    await prisma.concat.update({
+                        where: {
+                            ID: +id
+                        },
+                        data: {
+                            link,
+                            title
+                        }
+                    })
+                    unlink(concatToUpdate.logo.src, (err) => {
+                        if (err) {
+                            return next(err)
+                        }
+                    })
+                    return res.status(200).json({
+                        success: true,
+                        message: "Update done succesfully"
+                    })
+                }
+                else {
+                    await prisma.logo.create({
+                        data: {
+                            alt: `${title} logo`,
+                            fileName: saveFileName,
+                            src: source
+                        }
+                    })
+                    await prisma.concat.update({
+                        where: {
+                            ID: +id
+                        },
+                        data: {
+                            link,
+                            title,
+                            
+                        }
+                    })
+
+                    return res.status(200).json({
+                        success: true,
+                        message: "Update done succesfully"
+                    })
+                }
+            }
+
+            else {
+                await prisma.concat.update({
+                    where: {
+                        ID: +id
+                    },
+                    data: {
+                        link,
+                        title
+                    }
+                })
+                return res.status(200).json({
+                    success: true,
+                    message: "Update done succesfully"
+                })
+            }
+        } catch (error) {
+            console.log(error);
+            next(error)
+        }
+    }
+
 }
 
 export default new ConcarController

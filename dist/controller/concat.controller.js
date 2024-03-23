@@ -173,5 +173,110 @@ class ConcarController {
             next(error);
         }
     }
+    async edit(req, res, next) {
+        let { title, link } = req.body;
+        try {
+            let id = req.params.id;
+            const concatToUpdate = await prisma.concat.findUnique({
+                where: {
+                    ID: +id
+                },
+                include: {
+                    logo: true // Fetch associated logo if it exists
+                }
+            });
+            if (!concatToUpdate) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Concat not found"
+                });
+            }
+            if (req.files?.logo) {
+                // If a new logo is uploaded
+                const newLogo = Array.isArray(req.files.logo) ? req.files.logo[0] : req.files.logo;
+                let saveFileName = (0, RandomFileNameGenerator_1.fileNameGenerator)(newLogo.name);
+                let source = path_1.default.join(__dirname, '..', '..', 'public', 'images', saveFileName);
+                (0, sharp_1.default)(newLogo.data)
+                    .resize(200, 200)
+                    .toFile(source, (err, info) => {
+                    if (err) {
+                        return next(err);
+                    }
+                });
+                console.log(concatToUpdate.logo);
+                if (concatToUpdate.logo) {
+                    await prisma.logo.update({
+                        where: {
+                            concatID: +id
+                        },
+                        data: {
+                            alt: `${title} logo`,
+                            fileName: saveFileName,
+                            src: source
+                        }
+                    });
+                    await prisma.concat.update({
+                        where: {
+                            ID: +id
+                        },
+                        data: {
+                            link,
+                            title
+                        }
+                    });
+                    (0, fs_1.unlink)(concatToUpdate.logo.src, (err) => {
+                        if (err) {
+                            return next(err);
+                        }
+                    });
+                    return res.status(200).json({
+                        success: true,
+                        message: "Update done succesfully"
+                    });
+                }
+                else {
+                    await prisma.logo.create({
+                        data: {
+                            alt: `${title} logo`,
+                            fileName: saveFileName,
+                            src: source
+                        }
+                    });
+                    await prisma.concat.update({
+                        where: {
+                            ID: +id
+                        },
+                        data: {
+                            link,
+                            title,
+                        }
+                    });
+                    return res.status(200).json({
+                        success: true,
+                        message: "Update done succesfully"
+                    });
+                }
+            }
+            else {
+                await prisma.concat.update({
+                    where: {
+                        ID: +id
+                    },
+                    data: {
+                        link,
+                        title
+                    }
+                });
+                return res.status(200).json({
+                    success: true,
+                    message: "Update done succesfully"
+                });
+            }
+        }
+        catch (error) {
+            console.log(error);
+            next(error);
+        }
+    }
 }
 exports.default = new ConcarController;

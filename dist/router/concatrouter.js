@@ -10,4 +10,5 @@ concatRouter.get("/all", concat_controller_1.default.getAll);
 concatRouter.get("/get/:id", concat_controller_1.default.getById);
 concatRouter.post("/create", concat_controller_1.default.create);
 concatRouter.delete("/delete/:id", concat_controller_1.default.delete);
+concatRouter.put("/edit/:id", concat_controller_1.default.edit);
 exports.default = concatRouter;
