@@ -9,6 +9,7 @@ import exRouter from './router/exrouter'
 import expressFileUpload from 'express-fileupload'
 import Projectrouter from './router/projectrouter'
 import callRouter from './router/callo.router'
+import concatRouter from './router/concatrouter'
 
 
 dotenv.config({
@@ -34,6 +35,7 @@ app.use('/auth' , authRouter)
 app.use('/ex' , exRouter)
 app.use('/proj' , Projectrouter)
 app.use("/cal" , callRouter)
+app.use("/concat" , concatRouter)
 app.use(errorHandler.error404)
 app.use(errorHandler.unexceptionError)
 let port = process.env.PORT
