@@ -191,6 +191,7 @@ class ConcarController {
                     message: "Concat not found"
                 });
             }
+            console.log(concatToUpdate.logo);
             if (req.files?.logo) {
                 // If a new logo is uploaded
                 const newLogo = Array.isArray(req.files.logo) ? req.files.logo[0] : req.files.logo;
@@ -203,7 +204,6 @@ class ConcarController {
                         return next(err);
                     }
                 });
-                console.log(concatToUpdate.logo);
                 if (concatToUpdate.logo) {
                     await prisma.logo.update({
                         where: {
@@ -212,7 +212,8 @@ class ConcarController {
                         data: {
                             alt: `${title} logo`,
                             fileName: saveFileName,
-                            src: source
+                            src: source,
+                            concatID: +id
                         }
                     });
                     await prisma.concat.update({
@@ -221,7 +222,7 @@ class ConcarController {
                         },
                         data: {
                             link,
-                            title
+                            title,
                         }
                     });
                     (0, fs_1.unlink)(concatToUpdate.logo.src, (err) => {
@@ -239,7 +240,8 @@ class ConcarController {
                         data: {
                             alt: `${title} logo`,
                             fileName: saveFileName,
-                            src: source
+                            src: source,
+                            concatID: +id
                         }
                     });
                     await prisma.concat.update({
