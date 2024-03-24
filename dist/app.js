@@ -24,16 +24,6 @@ app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.json());
 app.use((0, express_fileupload_1.default)());
 app.use('/public/images', express_1.default.static(path_1.default.join(__dirname, '..', 'public', 'images')));
-app.get('/', (req, res, next) => {
-    try {
-        res.status(200).json({
-            message: "OK"
-        });
-    }
-    catch (error) {
-        next(error);
-    }
-});
 app.use('/auth', authrouter_1.default);
 app.use('/ex', exrouter_1.default);
 app.use('/proj', projectrouter_1.default);
